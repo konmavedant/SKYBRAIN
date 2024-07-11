@@ -1,21 +1,61 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+// Compatible with OpenZeppelin Contracts ^5.0.0
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts@5.0.2/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts@5.0.2/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts@5.0.2/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts@5.0.2/access/Ownable.sol";
+import "@openzeppelin/contracts@5.0.2/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts@5.0.2/token/ERC721/extensions/ERC721Votes.sol";
 
-contract MyNFT is ERC721URIStorage, Ownable {
-    uint256 public tokenCounter;
+contract SKYBRAIN is ERC721, ERC721URIStorage, ERC721Burnable, Ownable, EIP712, ERC721Votes {
+    constructor(address initialOwner)
+        ERC721("SKYBRAIN", "SKY")
+        Ownable(initialOwner)
+        EIP712("SKYBRAIN", "1")
+    {}
 
-    constructor(string memory name, string memory symbol) ERC721(name, symbol) Ownable(msg.sender) {
-        tokenCounter = 0;
+    function safeMint(address to, uint256 tokenId, string memory uri)
+        public
+        onlyOwner
+    {
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
     }
 
-    function createCollectible(string memory tokenURI, address recipient) public onlyOwner returns (uint256) {
-        uint256 newItemId = tokenCounter;
-        _safeMint(recipient, newItemId);
-        _setTokenURI(newItemId, tokenURI);
-        tokenCounter = tokenCounter + 1;
-        return newItemId;
+    // The following functions are overrides required by Solidity.
+
+    function _update(address to, uint256 tokenId, address auth)
+        internal
+        override(ERC721, ERC721Votes)
+        returns (address)
+    {
+        return super._update(to, tokenId, auth);
+    }
+
+    function _increaseBalance(address account, uint128 value)
+        internal
+        override(ERC721, ERC721Votes)
+    {
+        super._increaseBalance(account, value);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
